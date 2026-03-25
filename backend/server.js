@@ -33,11 +33,17 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// **Call `updateLeaderboard()` here**
-updateLeaderboard();
+// Full recomputation on boot is slow for serverless (cold start); trades still refresh via tradeController.
+if (process.env.VERCEL !== "1") {
+  updateLeaderboard();
+}
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
