@@ -13,14 +13,25 @@ import updateLeaderboard from "./services/leaderboardService.js";
 
 dotenv.config();
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
 
 // Middleware
 app.use(express.json());
 app.use(cors());
+
+// Wait for MongoDB before /api routes (avoids Mongoose "buffering timed out" on Vercel)
+app.use(async (req, res, next) => {
+  if (!req.originalUrl.startsWith("/api")) {
+    return next();
+  }
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error("connectDB middleware:", err);
+    res.status(503).json({ message: "Database unavailable" });
+  }
+});
 
 app.get("/", (req, res) => {
   res.json({ ok: true, message: "Virtual stock trading API — use routes under /api" });
